@@ -32,6 +32,7 @@ class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     private final ServerEndpointConfig config;
 
     private static ByteBuf faviconByteBuf = null;
+    private static ByteBuf indexByteBuf = null;
     private static ByteBuf notFoundByteBuf = null;
     private static ByteBuf badRequestByteBuf = null;
     private static ByteBuf forbiddenByteBuf = null;
@@ -39,6 +40,7 @@ class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     static {
         faviconByteBuf = buildStaticRes("/favicon.ico");
+        indexByteBuf = buildStaticRes("/public/index.html");
         notFoundByteBuf = buildStaticRes("/public/error/404.html");
         badRequestByteBuf = buildStaticRes("/public/error/400.html");
         forbiddenByteBuf = buildStaticRes("/public/error/403.html");
@@ -54,6 +56,9 @@ class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
         }
         if (internalServerErrorByteBuf == null) {
             internalServerErrorByteBuf = buildStaticRes("/public/error/5xx.html");
+        }
+        if (indexByteBuf == null) {
+            indexByteBuf = buildStaticRes("/public/error/5xx.html");
         }
     }
 
@@ -160,6 +165,16 @@ class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
         if ("/favicon.ico".equals(path)) {
             if (faviconByteBuf != null) {
                 res = new DefaultFullHttpResponse(HTTP_1_1, OK, faviconByteBuf.retainedDuplicate());
+            } else {
+                res = new DefaultFullHttpResponse(HTTP_1_1, NOT_FOUND);
+            }
+            sendHttpResponse(ctx, req, res);
+            return;
+        }
+
+        if ("/".equals(path) || "/index.html".equals(path)) {
+            if (indexByteBuf != null) {
+                res = new DefaultFullHttpResponse(HTTP_1_1, OK, indexByteBuf.retainedDuplicate());
             } else {
                 res = new DefaultFullHttpResponse(HTTP_1_1, NOT_FOUND);
             }

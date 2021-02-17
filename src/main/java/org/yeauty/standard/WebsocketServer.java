@@ -10,11 +10,14 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import org.yeauty.pojo.PojoEndpointServer;
+import org.yeauty.support.ServerMetrics;
+import org.yeauty.support.ThroughputCounter;
 
-import java.net.BindException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * @author Yeauty
@@ -23,7 +26,7 @@ import java.net.UnknownHostException;
 public class WebsocketServer {
 
     private final PojoEndpointServer pojoEndpointServer;
-
+    private final ScheduledExecutorService exe = Executors.newSingleThreadScheduledExecutor();
     private final ServerEndpointConfig config;
 
     public WebsocketServer(PojoEndpointServer webSocketServerHandler, ServerEndpointConfig serverEndpointConfig) {
@@ -53,6 +56,7 @@ public class WebsocketServer {
                         pipeline.addLast(new HttpServerCodec());
                         pipeline.addLast(new HttpObjectAggregator(65536));
                         pipeline.addLast(new HttpServerHandler(pojoEndpointServer, config));
+                        pipeline.addLast(new ThroughputCounter(exe,10000,new ServerMetrics()));
                     }
                 });
 
